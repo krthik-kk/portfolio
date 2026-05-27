@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 
+const LINKEDIN_URL = 'https://www.linkedin.com/in/karthik-r-455184332/';
+const CONTACT_EMAIL = 'karthik.rk0912@gmail.com';
+
+const EMPTY_MESSAGE_FORM = {
+  name: '',
+  email: '',
+  subject: '',
+  message: '',
+};
+
 const PROJECTS = [
   {
     title: 'Catalogue Management System',
@@ -73,6 +83,137 @@ function SkillList({ items }) {
   );
 }
 
+function useModalLock(onClose) {
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [onClose]);
+}
+
+function ModalShell({ label, onClose, children }) {
+  useModalLock(onClose);
+
+  return (
+    <div
+      className="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      onClick={onClose}
+    >
+      <button
+        type="button"
+        className="modal__close"
+        onClick={onClose}
+        aria-label="Close"
+      >
+        ×
+      </button>
+      <div className="modal__content" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CertificateModal({ imageSrc, alt, onClose }) {
+  return (
+    <ModalShell label="Internship certificate" onClose={onClose}>
+      <img className="modal__img" src={imageSrc} alt={alt} />
+    </ModalShell>
+  );
+}
+
+function MessageModal({ onClose }) {
+  const [form, setForm] = useState(EMPTY_MESSAGE_FORM);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const subject = encodeURIComponent(
+      form.subject.trim() || 'Portfolio contact message'
+    );
+    const body = encodeURIComponent(
+      `Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`
+    );
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+    onClose();
+  };
+
+  return (
+    <ModalShell label="Send message" onClose={onClose}>
+      <form className="message-form" onSubmit={handleSubmit}>
+        <h3 className="message-form__title">Send a message</h3>
+        <p className="message-form__hint">
+          Fill in the form below. Your email app will open with the message ready
+          to send.
+        </p>
+        <label className="message-form__field">
+          <span>Name</span>
+          <input
+            type="text"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            required
+            autoComplete="name"
+          />
+        </label>
+        <label className="message-form__field">
+          <span>Email</span>
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            autoComplete="email"
+          />
+        </label>
+        <label className="message-form__field">
+          <span>Subject</span>
+          <input
+            type="text"
+            name="subject"
+            value={form.subject}
+            onChange={handleChange}
+            placeholder="How can I help?"
+          />
+        </label>
+        <label className="message-form__field">
+          <span>Message</span>
+          <textarea
+            name="message"
+            value={form.message}
+            onChange={handleChange}
+            rows={5}
+            required
+          />
+        </label>
+        <div className="message-form__actions">
+          <button type="button" className="btn btn--ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className="btn">
+            Send Message
+          </button>
+        </div>
+      </form>
+    </ModalShell>
+  );
+}
+
 function useParallax() {
   useEffect(() => {
     const prefersReduced =
@@ -95,8 +236,20 @@ function useParallax() {
   }, []);
 }
 
+const INTERNSHIP_CERTIFICATE = {
+  src: `${process.env.PUBLIC_URL}/litmus7-internship-certificate.png`,
+  alt: 'LITMUS7 internship certificate for Karthik R Kumar',
+};
+
+const HERO_IMAGE =
+  'https://images.unsplash.com/photo-1517694712202-14dd95375aa9?auto=format&fit=crop&w=1920&q=80';
+
+const PROFILE_PHOTO = `${process.env.PUBLIC_URL}/profile-photo.png`;
+
 export default function Portfolio() {
   const [navScrolled, setNavScrolled] = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
+  const [showMessageForm, setShowMessageForm] = useState(false);
 
   useParallax();
 
@@ -123,40 +276,46 @@ export default function Portfolio() {
 
       <header id="home" className="hero">
         <div className="hero__bg-wrap" data-parallax data-speed="0.5">
-          <img
-            className="hero__bg"
-            src="https://images.unsplash.com/photo-1517694712202-14dd95375aa9?auto=format&fit=crop&w=1920&q=80"
-            alt=""
-          />
+          <img className="hero__bg" src={HERO_IMAGE} alt="" />
         </div>
         <div className="hero__overlay" aria-hidden="true" />
         <div className="hero__content">
-          <p className="hero__tag">Portfolio</p>
-          <h1 className="hero__title">
-            Karthik R Kumar
-            <span>Python • Full Stack • AI</span>
-          </h1>
-          <p className="hero__desc">
-            BTech CSE AIML student building modern web applications, backend
-            systems, and AI solutions — code as craft, projects as portfolio.
-          </p>
-          <div className="cta-row">
-            <a
-              href="https://github.com/krthik-kk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://www.linkedin.com/in/karthik-r-455184332/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn--ghost"
-            >
-              LinkedIn
-            </a>
+          <div className="hero__main">
+            <p className="hero__tag">Portfolio</p>
+            <h1 className="hero__title">
+              Karthik R Kumar
+              <span>Python • Full Stack • AI</span>
+            </h1>
+            <p className="hero__desc">
+              BTech CSE AIML student building modern web applications, backend
+              systems, and AI solutions — code as craft, projects as portfolio.
+            </p>
+            <div className="cta-row">
+              <a
+                href="https://github.com/krthik-kk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn"
+              >
+                GitHub
+              </a>
+              <a
+                href={LINKEDIN_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn--ghost"
+              >
+                Connect
+              </a>
+            </div>
+          </div>
+          <div className="hero__photo-wrap">
+            <img
+              className="hero__photo"
+              src={PROFILE_PHOTO}
+              alt="Karthik R Kumar"
+            />
+            <span className="hero__photo-frame" aria-hidden="true" />
           </div>
         </div>
         <a href="#work" className="hero__scroll" aria-label="Scroll to work">
@@ -238,8 +397,8 @@ export default function Portfolio() {
           <div className="about-split__image-wrap">
             <img
               className="about-split__image"
-              src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
-              alt=""
+              src={PROFILE_PHOTO}
+              alt="Karthik R Kumar"
             />
             <span className="about-split__frame" aria-hidden="true" />
           </div>
@@ -264,14 +423,41 @@ export default function Portfolio() {
         <div className="section__inner">
           <p className="section__label">Experience</p>
           <h2 className="section__title">Internship</h2>
-          <div className="edu-block">
-            <p className="edu-block__degree">Internship Certificate</p>
-            <p className="edu-block__school">
-              Add your internship certificate image/file here.
+          <div className="internship-block">
+            <p className="internship-block__company">
+              LITMUS7 Systems Consulting Pvt. Ltd.
             </p>
+            <p className="internship-block__location">
+              Infopark, Kochi, Kerala
+            </p>
+            <p className="internship-block__desc">
+              Completed an internship at LITMUS7, a leading technology consulting
+              firm. Gained hands-on industry experience working alongside
+              professional developers in a real-world software environment,
+              strengthening both technical and collaborative skills.
+            </p>
+            <button
+              type="button"
+              className="btn internship-block__btn"
+              onClick={() => setShowCertificate(true)}
+            >
+              View Certificate
+            </button>
           </div>
         </div>
       </section>
+
+      {showCertificate && (
+        <CertificateModal
+          imageSrc={INTERNSHIP_CERTIFICATE.src}
+          alt={INTERNSHIP_CERTIFICATE.alt}
+          onClose={() => setShowCertificate(false)}
+        />
+      )}
+
+      {showMessageForm && (
+        <MessageModal onClose={() => setShowMessageForm(false)} />
+      )}
 
       <section className="section">
         <div className="section__inner">
@@ -288,13 +474,13 @@ export default function Portfolio() {
         <div className="section__inner">
           <p className="section__label">Get in touch</p>
           <h2 className="section__title">Contact</h2>
-          <div className="contact-grid">
+          <div className="contact-links">
             <a
               className="contact-item contact-item--link"
-              href="mailto:karthik.rk0912@gmail.com"
+              href={`mailto:${CONTACT_EMAIL}`}
             >
               <h3>Email</h3>
-              <p>karthik.rk0912@gmail.com</p>
+              <p>{CONTACT_EMAIL}</p>
             </a>
             <a className="contact-item contact-item--link" href="tel:+917012307958">
               <h3>Phone</h3>
@@ -309,6 +495,24 @@ export default function Portfolio() {
               <h3>GitHub</h3>
               <p>github.com/krthik-kk</p>
             </a>
+            <a
+              className="contact-item contact-item--link"
+              href={LINKEDIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <h3>LinkedIn</h3>
+              <p>linkedin.com/in/karthik-r</p>
+            </a>
+          </div>
+          <div className="contact-message">
+            <button
+              type="button"
+              className="btn contact-message__btn"
+              onClick={() => setShowMessageForm(true)}
+            >
+              Send Message
+            </button>
           </div>
         </div>
       </section>
