@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useForm, ValidationError } from '@formspree/react';
 import './App.css';
 
 const LINKEDIN_URL = 'https://www.linkedin.com/in/karthik-r-455184332/';
@@ -132,80 +133,50 @@ function CertificateModal({ imageSrc, alt, onClose }) {
 }
 
 function MessageModal({ onClose }) {
-  const [form, setForm] = useState(EMPTY_MESSAGE_FORM);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const subject = encodeURIComponent(
-      form.subject.trim() || 'Portfolio contact message'
+  const [state, handleSubmit] = useForm('xvzydklk');
+  if (state.succeeded) {
+    return (
+      <ModalShell label="Message sent" onClose={onClose}>
+        <div className="message-form__success">
+          <h3>Thank you!</h3>
+          <p>Your message has been sent.</p>
+          <button className="btn" onClick={onClose}>Close</button>
+        </div>
+      </ModalShell>
     );
-    const body = encodeURIComponent(
-      `Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`
-    );
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-    onClose();
-  };
-
+  }
   return (
     <ModalShell label="Send message" onClose={onClose}>
       <form className="message-form" onSubmit={handleSubmit}>
         <h3 className="message-form__title">Send a message</h3>
         <p className="message-form__hint">
-          Fill in the form below. Your email app will open with the message ready
-          to send.
+          Fill in the form below. I will get back to you soon.
         </p>
         <label className="message-form__field">
           <span>Name</span>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            autoComplete="name"
-          />
+          <input type="text" name="name" required autoComplete="name" />
+          <ValidationError field="name" errors={state.errors} />
         </label>
         <label className="message-form__field">
           <span>Email</span>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            autoComplete="email"
-          />
+          <input type="email" name="email" required autoComplete="email" />
+          <ValidationError field="email" errors={state.errors} />
         </label>
         <label className="message-form__field">
           <span>Subject</span>
-          <input
-            type="text"
-            name="subject"
-            value={form.subject}
-            onChange={handleChange}
-            placeholder="How can I help?"
-          />
+          <input type="text" name="subject" placeholder="How can I help?" />
         </label>
         <label className="message-form__field">
           <span>Message</span>
-          <textarea
-            name="message"
-            value={form.message}
-            onChange={handleChange}
-            rows={5}
-            required
-          />
+          <textarea name="message" rows={5} required />
+          <ValidationError field="message" errors={state.errors} />
         </label>
+        <ValidationError errors={state.errors} />
         <div className="message-form__actions">
           <button type="button" className="btn btn--ghost" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="btn">
+          <button type="submit" className="btn" disabled={state.submitting}>
             Send Message
           </button>
         </div>
